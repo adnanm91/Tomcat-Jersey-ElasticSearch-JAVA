@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <contextName>olivebh</contextName>
+
+  <property name="MODULE_NAME" value="es-dwh"/>
+  <property name="LOGGING_DIR" value="${biss.ua.logging.dir:-logs}/"/>
+  <property name="PATTERN_DEFAULT" value="[%date{dd.MM.yyyy HH:mm:ss.SSS}] : %-5level : %thread : %contextName : [%logger.%method:%line] : %message%n%exception"/>
+
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="RootConsoleAppender">
+    <encoder>
+      <pattern>${PATTERN_DEFAULT}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <append>true</append>
+    <file>${LOGGING_DIR}${MODULE_NAME}.log</file>
+    <encoder>
+      <pattern>${PATTERN_DEFAULT}</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOGGING_DIR}${MODULE_NAME}.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+    </rollingPolicy>
+  </appender>
+
+  <appender name="DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <append>true</append>
+    <file>${LOGGING_DIR}${MODULE_NAME}-debug.log</file>
+    <encoder>
+      <pattern>${PATTERN_DEFAULT}</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOGGING_DIR}${MODULE_NAME}-debug.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+    </rollingPolicy>
+  </appender>
+
+  <appender name="SPRING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <append>true</append>
+    <file>${LOGGING_DIR}${MODULE_NAME}-spring.log</file>
+    <encoder>
+      <pattern>${PATTERN_DEFAULT}</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOGGING_DIR}${MODULE_NAME}-spring.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+    </rollingPolicy>
+  </appender>
+
+  <!-- perf4j appenders -->
+  <appender name="Perf4jRawAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <append>true</append>
+    <file>${LOGGING_DIR}${MODULE_NAME}-perf4j-raw.log</file>
+    <encoder>
+      <pattern>%m%n</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOGGING_DIR}${MODULE_NAME}-perf4j-raw.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+    </rollingPolicy>
+  </appender>
+
+  <appender name="Perf4jStatisticsFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <append>true</append>
+    <file>${LOGGING_DIR}${MODULE_NAME}-perf4j.log</file>
+    <encoder>
+      <pattern>%m%n</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOGGING_DIR}${MODULE_NAME}-perf4j.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+    </rollingPolicy>
+  </appender>
+
+  <appender class="org.perf4j.logback.AsyncCoalescingStatisticsAppender" name="Perf4jCoalescingStatisticsAppender">
+    <param name="TimeSlice" value="15000"/>
+    <appender-ref ref="Perf4jStatisticsFile"/>
+  </appender>
+
+  <root level="error" additivity="false">
+    <appender-ref ref="RootConsoleAppender"/>
+  </root>
+
+  <logger name="org.springframework" additivity="false">
+    <level value="debug"/>
+    <appender-ref ref="SPRING"/>
+  </logger>
+
+  <logger name="hr.biss.ua.es.dwh" additivity="false">
+    <level value="debug"/>
+    <appender-ref ref="DEBUG"/>
+    <appender-ref ref="RootConsoleAppender"/>
+  </logger>
+
+  <logger name="org.springframework">
+    <level value="info"/>
+  </logger>
+
+  <!--if condition='"${spring.profiles.active}" == "production"'>
+    <then>
+      <root level="warn">
+        <appender-ref ref="FILE"/>
+      </root>
+    </then>
+    <else>
+      <root level="warn">
+        <appender-ref ref="RootConsoleAppender"/>
+      </root>
+    </else>
+  </if-->
+
+  <!--if condition='"${spring.profiles.active}" == "production"'>
+    <then>
+      <logger name="org.springframework">
+        <level value="warn"/>
+      </logger>
+    </then>
+    <else>
+      <logger name="org.springframework">
+        <level value="info"/>
+      </logger>
+
+      <logger name="org.springframework.cassandra.core.CqlTemplate">
+        <level value="debug"/>
+      </logger>
+    </else>
+  </if-->
+
+  <!-- must be set to info for interceptors -->
+  <logger name="org.apache.cxf">
+    <level value="info"/>
+  </logger>
+
+  <logger name="org.perf4j.TimingLogger" additivity="false">
+    <level value="info"/>
+    <appender-ref ref="Perf4jCoalescingStatisticsAppender"/>
+    <appender-ref ref="Perf4jRawAppender"/>
+  </logger>
+
+</configuration>
